@@ -27,6 +27,7 @@ router.get("/:code", async (req, res) => {
     const [stops] = await conn.query(SELECT_STOP + " WHERE route_id = ? ORDER BY seq", [route.id]);
     res.json(attachStops([route], stops as any[])[0] as Route);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -55,6 +56,7 @@ router.put("/:code/stops/:seq", async (req, res) => {
     }
     res.status(200).json({ affected_row: updateResult.affectedRows });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

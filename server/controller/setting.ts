@@ -17,6 +17,7 @@ router.get("/", async (req, res) => {
     }
     res.json({ ...setting, back: !!setting.back } as Setting);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -48,6 +49,7 @@ router.put("/", async (req, res) => {
     }
     res.status(200).json({ affected_row: updateResult.affectedRows });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

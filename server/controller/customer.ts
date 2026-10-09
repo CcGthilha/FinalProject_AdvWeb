@@ -27,6 +27,7 @@ router.get("/", async (req, res) => {
       res.json(rows as Customer[]);
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -41,6 +42,7 @@ router.get("/search", async (req, res) => {
     );
     res.json(rows as Customer[]);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -67,6 +69,7 @@ router.get("/nearby", async (req, res) => {
     const [rows] = await conn.query(sql, [lat, lng, lat, km]);
     res.json(rows);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -82,6 +85,7 @@ router.get("/:id", async (req, res) => {
     }
     res.json(customers[0]);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -111,6 +115,7 @@ router.post("/", async (req, res) => {
       last_idx: insertResult.insertId,
     });
   } catch (error: any) {
+    console.error(error);
     if (error.code === "ER_DUP_ENTRY") {
       res.status(409).json({ error: "เบอร์โทรนี้มีอยู่แล้ว" });
       return;
@@ -155,6 +160,7 @@ router.put("/:id", async (req, res) => {
     const updateResult = records as any;
     res.status(200).json({ affected_row: updateResult.affectedRows });
   } catch (error: any) {
+    console.error(error);
     if (error.code === "ER_DUP_ENTRY") {
       res.status(409).json({ error: "เบอร์โทรนี้มีอยู่แล้ว" });
       return;
@@ -174,6 +180,7 @@ router.delete("/:id", async (req, res) => {
     }
     res.status(200).json({ affected_row: deleteResult.affectedRows });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

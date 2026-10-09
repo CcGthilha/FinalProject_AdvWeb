@@ -34,6 +34,7 @@ router.get("/", async (req, res) => {
     const [rows] = await conn.query(SELECT_ORDER + " WHERE o.order_date = ? ORDER BY o.id", [date]);
     res.json(rows as Order[]);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -67,6 +68,7 @@ router.get("/nearby", async (req, res) => {
     const [rows] = await conn.query(sql, [lat, lng, lat, date, km]);
     res.json(rows);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -114,6 +116,7 @@ router.post("/simulate", async (req, res) => {
       last_idx: insertResult.insertId,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -129,6 +132,7 @@ router.get("/:id", async (req, res) => {
     }
     res.json(orders[0]);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -160,6 +164,7 @@ router.post("/", async (req, res) => {
       last_idx: insertResult.insertId,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -181,6 +186,7 @@ router.put("/:id", async (req, res) => {
     }
     res.status(200).json({ affected_row: updateResult.affectedRows });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -197,6 +203,7 @@ router.delete("/", async (req, res) => {
     const deleteResult = result as any;
     res.status(200).json({ affected_row: deleteResult.affectedRows });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -212,6 +219,7 @@ router.delete("/:id", async (req, res) => {
     }
     res.status(200).json({ affected_row: deleteResult.affectedRows });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

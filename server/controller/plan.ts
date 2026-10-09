@@ -56,6 +56,7 @@ router.get("/latest", async (req, res) => {
     }
     res.json(plan);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -120,6 +121,7 @@ router.post("/", async (req, res) => {
     await c.commit();
     res.status(201).json(await getPlan(today));
   } catch (error) {
+    console.error(error);
     if (c) await c.rollback();
     res.status(500).json({ error: "Internal server error" });
   } finally {
