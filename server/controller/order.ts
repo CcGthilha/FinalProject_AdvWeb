@@ -71,20 +71,35 @@ router.get("/nearby", async (req, res) => {
   }
 });
 
-// POST /orders/simulate  { n: 20..30 }  ล้างออเดอร์วันนี้ แล้วสุ่มใหม่ (ลูกค้าไม่ซ้ำ กล่อง 1-3)
+// POST /orders/simulate  { n }  ล้างออเดอร์วันนี้ แล้วสุ่มใหม่ (ลูกค้าไม่ซ้ำ กล่อง 1-3)
+// ใส่ n = จำนวนเต็มตั้งแต่ 1 (ต้องไม่เกินจำนวนลูกค้า)
+// ไม่ใส่ n = สุ่ม 20-30 ตาม HW-5 แต่ถ้าลูกค้ามีน้อยกว่านั้น ใช้ลูกค้าทุกคน
 router.post("/simulate", async (req, res) => {
   try {
-    const n = Number(req.body?.n);
-    if (!Number.isInteger(n) || n < 20 || n > 30) {
-      res.status(400).json({ error: "n ต้องเป็นจำนวนเต็ม 20-30" });
+    const [countRows] = await conn.query("SELECT COUNT(*) AS cnt FROM customer");
+    const total = Number((countRows as any[])[0].cnt);
+    if (total === 0) {
+      res.status(400).json({ error: "ยังไม่มีลูกค้าในระบบ" });
       return;
     }
+
+    let n: number;
+    if (req.body?.n === undefined || req.body?.n === null || req.body?.n === "") {
+      n = Math.min(total, 20 + Math.floor(Math.random() * 11));
+    } else {
+      n = Number(req.body.n);
+      if (!Number.isInteger(n) || n < 1) {
+        res.status(400).json({ error: "n ต้องเป็นจำนวนเต็มตั้งแต่ 1" });
+        return;
+      }
+      if (n > total) {
+        res.status(400).json({ error: `มีลูกค้า ${total} คน จำลอง ${n} ออเดอร์ไม่ได้ (ลูกค้า 1 คนได้ 1 ออเดอร์)` });
+        return;
+      }
+    }
+
     const [rows] = await conn.query("SELECT id FROM customer ORDER BY RAND() LIMIT ?", [n]);
     const customers = rows as { id: number }[];
-    if (customers.length < n) {
-      res.status(400).json({ error: `มีลูกค้า ${customers.length} คน จำลอง ${n} ออเดอร์ไม่ได้` });
-      return;
-    }
     const today = todayBangkok();
     await conn.query("DELETE FROM orders WHERE order_date = ?", [today]);
 
