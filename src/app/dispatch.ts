@@ -21,7 +21,7 @@ const chunks = (a: number[]) =>
   imports: [MapView, RouterLink, FormsModule],
   template: ` <header class="page">
       <div>
-        <h1>จัดเส้นทางส่ง</h1>
+        <h1>เส้นทางส่ง</h1>
         <p class="sub">
           ออกจากร้าน {{ t(0) }} ต้องถึงลูกค้าทุกคนก่อน {{ t(60) }}
         </p>
