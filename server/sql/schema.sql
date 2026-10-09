@@ -34,7 +34,7 @@ CREATE TABLE plan (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   plan_date  DATE NOT NULL UNIQUE,
   depart     CHAR(5) NOT NULL,
-  sig        VARCHAR(64),
+  sig        VARCHAR(500),   -- กลุ่มออเดอร์ของทุกคัน เช่น "1,5,9|2,3" ยาวได้
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -48,7 +48,7 @@ CREATE TABLE route (
   boxes     TINYINT NOT NULL CHECK (boxes <= 10),
   km        DECIMAL(6,2),
   fee       DECIMAL(8,2),
-  end_min   SMALLINT,
+  end_min   DECIMAL(6,2),   -- นาทีหลังออกจากร้าน (ทศนิยมได้)
   UNIQUE (plan_date, code),
   FOREIGN KEY (plan_id) REFERENCES plan(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -65,7 +65,7 @@ CREATE TABLE stop (
   lng      DECIMAL(9,6),
   boxes    TINYINT,
   km       DECIMAL(6,2),
-  at_min   SMALLINT,
+  at_min   DECIMAL(6,2),
   done     BOOL NOT NULL DEFAULT 0,
   UNIQUE (route_id, seq),
   FOREIGN KEY (route_id) REFERENCES route(id) ON DELETE CASCADE,

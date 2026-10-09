@@ -3,6 +3,9 @@ import cors from "cors";
 import { router as index } from "./controller/index";
 import { router as customer } from "./controller/customer";
 import { router as order } from "./controller/order";
+import { router as setting } from "./controller/setting";
+import { router as plan } from "./controller/plan";
+import { router as route } from "./controller/route";
 
 export const app = express();
 
@@ -30,7 +33,6 @@ app.use(express.json());
 app.use("/", index);
 app.use("/customers", customer);
 app.use("/orders", order);
-// เฟสถัดไปจะเพิ่ม:
-// app.use("/settings", setting);
-// app.use("/plan", plan);
-// app.use("/route", route);
+app.use("/settings", setting);
+app.use("/plan", plan);
+app.use("/route", route);
