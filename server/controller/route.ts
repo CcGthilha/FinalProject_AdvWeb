@@ -50,7 +50,7 @@ router.put("/:code/stops/:seq", async (req, res) => {
     const updateResult = result as any;
     // mysql2 เปิด FOUND_ROWS เป็นค่าเริ่มต้น affectedRows จึงนับแถวที่ตรงเงื่อนไข แม้ค่า done จะไม่เปลี่ยน
     if (updateResult.affectedRows === 0) {
-      res.status(404).json({ error: "ไม่พบจุดส่งนี้ในใบงาน" });
+      res.status(404).json({ error: "ไม่พบจุดส่งนี้" });
       return;
     }
     res.status(200).json({ affected_row: updateResult.affectedRows });
