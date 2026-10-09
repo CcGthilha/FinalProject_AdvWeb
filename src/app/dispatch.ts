@@ -1,10 +1,18 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MapLine, MapPin, MapView } from './map';
 import { LIMIT, MAXO, Route, SHOP, Settings, Totals } from './models';
 import { build, solveMany, totals } from './optimizer';
-import { Store } from './store.service';
+import { Store, apiError } from './store.service';
 import { baht, clock } from './util';
 
 interface Alt {
@@ -224,22 +232,23 @@ const chunks = (a: number[]) =>
         @if (confirmed()) {
           <p>
             สร้างใบงานแล้ว แจ้งรหัส 4 หลักให้ไรเดอร์แต่ละคน
-            แล้วให้เปิดหน้าไรเดอร์เพื่อกรอกรหัส
+            แล้วให้เปิดหน้าไรเดอร์เพื่อกรอกรหัส สถานะการส่งอัปเดตเองทุก 15 วินาที
           </p>
+          <button class="btn ghost" (click)="s.refreshPlan()">รีเฟรชสถานะ</button>
         } @else {
           <p>ถ้าพอใจกับเส้นทางนี้ ยืนยันเพื่อออกรหัสใบงานให้ไรเดอร์</p>
           <button
             class="btn go big"
-            [disabled]="tot().late > 0"
+            [disabled]="tot().late > 0 || busy()"
             (click)="confirmPlan()"
           >
-            ยืนยันและสร้างใบงาน
+            {{ busy() ? 'กำลังสร้างใบงาน…' : 'ยืนยันและสร้างใบงาน' }}
           </button>
         }
       </div>
     }`,
 })
-export class DispatchPage {
+export class DispatchPage implements OnDestroy {
   s = inject(Store);
   baht = baht;
   LIMIT = LIMIT;
@@ -258,6 +267,23 @@ export class DispatchPage {
   sel = signal(0);
   focus = signal<number | null>(null);
   msg = signal('');
+  busy = signal(false);
+  private timer = setInterval(() => {
+    // ดึงสถานะแผนใหม่ทุก 15 วินาที (เฉพาะตอนมีแผนของวันนี้) เพื่อเห็นไรเดอร์กด "ส่งแล้ว"
+    if (this.s.plan()) this.s.refreshPlan();
+  }, 15000);
+
+  constructor() {
+    // แผนโหลดจาก API แบบ async: พอได้แผนของวันนี้ และยังไม่ได้คำนวณอะไร ให้แสดงแผนนั้น
+    effect(() => {
+      const p = this.s.plan();
+      if (p && untracked(() => this.pool().length === 0))
+        this.pool.set([{ sig: p.sig, routes: p.routes, tot: totals(p.routes) }]);
+    });
+  }
+  ngOnDestroy() {
+    clearInterval(this.timer);
+  }
   cur = computed(() => this.pool()[this.sel()]);
   confirmed = computed(
     () => !!this.cur() && this.s.plan()?.sig === this.cur().sig,
@@ -317,7 +343,7 @@ export class DispatchPage {
   on = (r: number) => this.focus() === null || this.focus() === r;
   done = (r: Route) => r.stops.filter((p) => p.done).length;
   setSet(k: keyof Settings, v: number | string | boolean) {
-    this.s.settings.update((o) => ({ ...o, [k]: v }));
+    this.s.updateSettings({ [k]: v });
     this.pool.set([]);
     this.sel.set(0);
     this.focus.set(null);
@@ -356,8 +382,16 @@ export class DispatchPage {
       );
     }
   }
-  confirmPlan() {
+  async confirmPlan() {
     const c = this.cur();
-    this.s.confirm(c.routes, c.sig);
+    this.busy.set(true);
+    this.msg.set('');
+    try {
+      await this.s.confirm(c.routes, c.sig);
+    } catch (e) {
+      this.msg.set(apiError(e)); // เช่น 409 ไรเดอร์เริ่มส่งแล้ว
+    } finally {
+      this.busy.set(false);
+    }
   }
 }

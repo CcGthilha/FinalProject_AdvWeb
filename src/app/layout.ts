@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Store } from './store.service';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
@@ -14,7 +15,17 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     </nav>
     <a class="rlink" routerLink="/rider" target="_blank">เปิดหน้าสำหรับไรเดอร์</a>
   </aside>
-  <main><router-outlet /></main>
+  <main>
+    @if (s.err()) {
+      <p class="note bad">{{ s.err() }} <button class="btn ghost sm" (click)="s.err.set(''); s.init()">ลองใหม่</button></p>
+    }
+    <router-outlet />
+  </main>
 </div>`,
 })
-export class Layout {}
+export class Layout {
+  s = inject(Store);
+  constructor() {
+    this.s.init(); // โหลดลูกค้า ออเดอร์ ตั้งค่า จาก API ครั้งเดียวตอนเข้าแอปฝั่งร้าน
+  }
+}

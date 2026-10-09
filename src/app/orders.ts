@@ -120,6 +120,6 @@ export class OrdersPage {
     this.nb.set(1);
   }
   clear() {
-    if (confirm('ลบออเดอร์ทั้งหมด?')) this.s.orders.set([]);
+    if (confirm('ลบออเดอร์ทั้งหมดของวันนี้?')) this.s.clearOrders();
   }
 }

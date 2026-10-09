@@ -4,7 +4,9 @@ export interface Pt {
 }
 export interface Customer extends Pt {
   id: number;
-  name: string;
+  firstname: string;
+  lastname: string;
+  name: string; // firstname + ' ' + lastname (server ต่อให้)
   phone: string;
   address: string;
 }

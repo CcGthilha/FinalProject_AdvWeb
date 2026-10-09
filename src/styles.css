@@ -381,6 +381,13 @@ td.warn {
     margin-top: 12px
 }
 
+/* ช่องชื่อ / นามสกุล คู่กันในฟอร์มลูกค้า */
+.grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px
+}
+
 .chk {
     display: flex;
     gap: 8px;

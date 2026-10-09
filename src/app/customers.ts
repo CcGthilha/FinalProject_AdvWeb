@@ -3,10 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { MapPin, MapView } from './map';
 import { Customer, SHOP } from './models';
 import { km } from './optimizer';
-import { Store } from './store.service';
+import { Store, apiError } from './store.service';
 
 const blank = (): Customer => ({
   id: 0,
+  firstname: '',
+  lastname: '',
   name: '',
   phone: '',
   address: '',
@@ -75,11 +77,18 @@ const blank = (): Customer => ({
       <div class="stack">
         <section class="card form">
           <h2>{{ f().id ? 'แก้ไขข้อมูลลูกค้า' : 'ลูกค้าใหม่' }}</h2>
-          <label
-            >ชื่อ<input
-              [ngModel]="f().name"
-              (ngModelChange)="set('name', $event)"
-          /></label>
+          <div class="grid2">
+            <label
+              >ชื่อ<input
+                [ngModel]="f().firstname"
+                (ngModelChange)="set('firstname', $event)"
+            /></label>
+            <label
+              >นามสกุล<input
+                [ngModel]="f().lastname"
+                (ngModelChange)="set('lastname', $event)"
+            /></label>
+          </div>
           <label
             >เบอร์โทร<input
               inputmode="tel"
@@ -103,8 +112,13 @@ const blank = (): Customer => ({
               <p class="err">{{ e }}</p>
             }
           }
+          @if (apiErr()) {
+            <p class="err">{{ apiErr() }}</p>
+          }
           <div class="acts">
-            <button class="btn go" (click)="save()">บันทึก</button>
+            <button class="btn go" [disabled]="busy()" (click)="save()">
+              {{ busy() ? 'กำลังบันทึก…' : 'บันทึก' }}
+            </button>
             @if (f().id) {
               <button class="btn ghost" (click)="edit(null)">ยกเลิก</button>
             }
@@ -121,6 +135,8 @@ export class CustomersPage {
   q = signal('');
   f = signal<Customer>(blank());
   tried = signal(false);
+  busy = signal(false);
+  apiErr = signal('');
   list = computed(() => {
     const q = this.q().trim().toLowerCase();
     return this.s
@@ -132,7 +148,8 @@ export class CustomersPage {
   errs = computed(() => {
     const c = this.f(),
       e: string[] = [];
-    if (!c.name.trim()) e.push('กรอกชื่อลูกค้า');
+    if (!c.firstname.trim()) e.push('กรอกชื่อลูกค้า');
+    if (!c.lastname.trim()) e.push('กรอกนามสกุลลูกค้า');
     if (!/^0\d{8,9}$/.test(c.phone.replace(/\D/g, '')))
       e.push('เบอร์โทรต้องเป็นตัวเลข 9-10 หลัก ขึ้นต้นด้วย 0');
     if (!c.lat) e.push('ปักหมุดบ้านลูกค้าบนแผนที่');
@@ -169,22 +186,35 @@ export class CustomersPage {
   edit(c: Customer | null) {
     this.f.set(c ? { ...c } : blank());
     this.tried.set(false);
+    this.apiErr.set('');
   }
-  save() {
+  async save() {
     this.tried.set(true);
     if (this.errs().length) return;
     const c = this.f();
-    this.s.saveCustomer({
-      ...c,
-      name: c.name.trim(),
-      phone: c.phone.replace(/\D/g, ''),
-    });
-    this.edit(null);
+    this.busy.set(true);
+    this.apiErr.set('');
+    try {
+      await this.s.saveCustomer({
+        ...c,
+        firstname: c.firstname.trim(),
+        lastname: c.lastname.trim(),
+        phone: c.phone.replace(/\D/g, ''),
+      });
+      this.edit(null);
+    } catch (e) {
+      this.apiErr.set(apiError(e)); // เช่น 409 เบอร์โทรนี้มีอยู่แล้ว
+    } finally {
+      this.busy.set(false);
+    }
   }
-  del(c: Customer) {
-    if (confirm(`ลบ ${c.name}? ออเดอร์ของลูกค้ารายนี้จะถูกลบด้วย`)) {
-      this.s.delCustomer(c.id);
+  async del(c: Customer) {
+    if (!confirm(`ลบ ${c.name}? ออเดอร์ของลูกค้ารายนี้จะถูกลบด้วย`)) return;
+    try {
+      await this.s.delCustomer(c.id);
       if (this.f().id === c.id) this.edit(null);
+    } catch (e) {
+      this.apiErr.set(apiError(e));
     }
   }
 }
